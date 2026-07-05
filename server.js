@@ -8,6 +8,24 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function isValidId(id) {
+  return /^\d+$/.test(String(id));
+}
+
+function isValidName(name) {
+  return typeof name === "string" && name.trim().length > 0 && name.trim().length <= 100;
+}
+
+function isValidEmail(email) {
+  return typeof email === "string" && email.trim().length <= 255 && EMAIL_RE.test(email.trim());
+}
+
+function isValidPassword(password) {
+  return typeof password === "string" && password.length >= 1 && password.length <= 72;
+}
+
 // 1. CONNECT TO POSTGRESQL (Supabase connection string)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -24,7 +42,7 @@ pool.connect((err, client, release) => {
 });
 
 // 2. MIDDLEWARE
-app.use(express.json());
+app.use(express.json({ limit: "10kb" }));
 app.use(cors({
   origin: [
     "https://abaldosano.github.io",
@@ -53,6 +71,9 @@ app.get("/api/users", async (req, res) => {
 app.get("/api/users/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    if (!isValidId(id)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
     const result = await pool.query(
       "SELECT id, name, email, created_at FROM users WHERE id = $1",
       [id]
@@ -70,16 +91,16 @@ app.get("/api/users/:id", async (req, res) => {
 // CREATE
 app.post("/api/users", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password) {
-      return res.status(400).json({ error: "name, email, and password are required" });
+    const { name, email, password } = req.body || {};
+    if (!isValidName(name) || !isValidEmail(email) || !isValidPassword(password)) {
+      return res.status(400).json({ error: "name, email, and password are required and must be valid" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await pool.query(
       `INSERT INTO users (name, email, password)
        VALUES ($1, $2, $3)
        RETURNING id, name, email, created_at`,
-      [name, email, hashedPassword]
+      [name.trim(), email.trim().toLowerCase(), hashedPassword]
     );
     res.status(201).json(result.rows[0]);
   } catch (err) {
@@ -95,14 +116,32 @@ app.post("/api/users", async (req, res) => {
 app.put("/api/users/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, password } = req.body;
+    if (!isValidId(id)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
+    const { name, email, password } = req.body || {};
     const fields = [];
     const values = [];
     let idx = 1;
 
-    if (name)     { fields.push(`name = $${idx++}`);     values.push(name); }
-    if (email)    { fields.push(`email = $${idx++}`);    values.push(email); }
+    if (name !== undefined) {
+      if (!isValidName(name)) {
+        return res.status(400).json({ error: "Invalid name" });
+      }
+      fields.push(`name = $${idx++}`);
+      values.push(name.trim());
+    }
+    if (email !== undefined) {
+      if (!isValidEmail(email)) {
+        return res.status(400).json({ error: "Invalid email" });
+      }
+      fields.push(`email = $${idx++}`);
+      values.push(email.trim().toLowerCase());
+    }
     if (password) {
+      if (!isValidPassword(password)) {
+        return res.status(400).json({ error: "Invalid password" });
+      }
       const hashed = await bcrypt.hash(password, 10);
       fields.push(`password = $${idx++}`);
       values.push(hashed);
@@ -132,6 +171,9 @@ app.put("/api/users/:id", async (req, res) => {
 app.delete("/api/users/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    if (!isValidId(id)) {
+      return res.status(400).json({ error: "Invalid user id" });
+    }
     const result = await pool.query(
       "DELETE FROM users WHERE id = $1 RETURNING id, name",
       [id]

@@ -3,72 +3,81 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PostgreSQL Users CRUD practice app" />
+  <meta name="color-scheme" content="light" />
   <title>PostgreSQL Users CRUD</title>
   <link rel="stylesheet" href="assets/css/global.css" />
 </head>
 <body>
+
+<a class="skip-link" href="#main-content">Skip to main content</a>
 
 <header>
   <h1>PostgreSQL CRUD</h1>
   <p>Practice users table app: name, email, password.<br>Please don't put your real information here. This is a live database for practice purposes only.</p>
 </header>
 
-<div class="layout">
+<main id="main-content" class="layout">
 
-  <div class="form-panel">
-    <div id="mode-badge">CREATE MODE</div>
-    <h2>User Form</h2>
+  <section class="form-panel" aria-labelledby="form-heading">
+    <div id="mode-badge" role="status">CREATE MODE</div>
+    <h2 id="form-heading">User Form</h2>
 
-    <div class="form-group">
-      <label>NAME</label>
-      <input type="text" id="input-name" placeholder="xX_cUpCaKe-DA-DeStRoYeR_Xx" />
-    </div>
-    <div class="form-group">
-      <label>EMAIL</label>
-      <input type="email" id="input-email" placeholder="userpogi321@godaddy.com HAHAHA" />
-    </div>
-    <div class="form-group">
-      <label>PASSWORD</label>
-      <input type="password" id="input-password" placeholder="••••••••" />
-    </div>
+    <form id="user-form" novalidate>
+      <div class="form-group">
+        <label for="input-name">Name</label>
+        <input type="text" id="input-name" name="name" autocomplete="name" placeholder="xX_cUpCaKe-DA-DeStRoYeR_Xx" maxlength="100" required />
+      </div>
+      <div class="form-group">
+        <label for="input-email">Email</label>
+        <input type="email" id="input-email" name="email" autocomplete="email" placeholder="userpogi321@godaddy.com HAHAHA" maxlength="255" required />
+      </div>
+      <div class="form-group">
+        <label for="input-password">Password</label>
+        <input type="password" id="input-password" name="password" autocomplete="new-password" placeholder="••••••••" maxlength="72" />
+      </div>
 
-    <div class="btn-row">
-      <button class="btn-primary" id="btn-submit" onclick="submitForm()">Create User</button>
-      <button class="btn-secondary" id="btn-cancel" onclick="resetForm()" style="display:none">Cancel</button>
-    </div>
+      <div class="btn-row">
+        <button type="submit" class="btn-primary" id="btn-submit">Create User</button>
+        <button type="button" class="btn-secondary" id="btn-cancel" hidden>Cancel</button>
+      </div>
+    </form>
 
-    <div id="feedback"></div>
-  </div>
+    <div id="feedback" role="alert" aria-live="assertive"></div>
+  </section>
 
-  <div class="table-panel">
-    <h2>
+  <section class="table-panel" aria-labelledby="table-heading">
+    <h2 id="table-heading">
       Users
-      <span class="count-badge" id="count-badge">0</span>
+      <span class="count-badge" id="count-badge" aria-label="Total users">0</span>
     </h2>
 
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Email</th>
-          <th>Created</th>
-          <th></th>
-        </tr>
-      </thead>
-      <tbody id="users-body">
-        <tr>
-          <td colspan="5" class="empty-state">No users yet. Create one!</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+    <div class="table-wrapper" tabindex="0" role="region" aria-label="Users table, scrollable on small screens">
+      <table>
+        <caption class="visually-hidden">List of registered users with edit and delete actions</caption>
+        <thead>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Created</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="users-body">
+          <tr>
+            <td colspan="5" class="empty-state">No users yet. Create one!</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
 
-<div class="sql-log">
-  <h3>Last SQL Query</h3>
-  <div id="sql-display">-- queries will appear here as you use the app</div>
-</div>
+<section class="sql-log" aria-labelledby="sql-heading">
+  <h3 id="sql-heading">Last SQL Query</h3>
+  <div id="sql-display" aria-live="polite">-- queries will appear here as you use the app</div>
+</section>
 
 <script src="assets/js/app.js"></script>
 

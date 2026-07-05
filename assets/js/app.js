@@ -2,10 +2,16 @@ const API = "https://database-practice-production.up.railway.app/api/users";
 
 let editingId = null;
 
+function escapeHTML(str) {
+  const div = document.createElement("div");
+  div.textContent = String(str ?? "");
+  return div.innerHTML;
+}
+
 function showSQL(type, data = {}) {
   const el = document.getElementById("sql-display");
   const kw  = (s) => `<span class="keyword">${s}</span>`;
-  const val = (s) => `<span class="value">'${s}'</span>`;
+  const val = (s) => `<span class="value">'${escapeHTML(s)}'</span>`;
 
   const queries = {
     getAll: `${kw("SELECT")} id, name, email, created_at\n${kw("FROM")} users\n${kw("ORDER BY")} id ASC;`,
@@ -33,14 +39,14 @@ async function loadUsers() {
 
     tbody.innerHTML = users.map(u => `
       <tr>
-        <td class="id-cell">#${u.id}</td>
-        <td>${u.name}</td>
-        <td class="email-cell">${u.email}</td>
-        <td class="date-cell">${new Date(u.created_at).toLocaleDateString()}</td>
+        <td class="id-cell">#${escapeHTML(u.id)}</td>
+        <td>${escapeHTML(u.name)}</td>
+        <td class="email-cell">${escapeHTML(u.email)}</td>
+        <td class="date-cell">${escapeHTML(new Date(u.created_at).toLocaleDateString())}</td>
         <td>
           <div class="actions">
-            <button class="btn-edit" onclick="startEdit(${u.id}, '${u.name}', '${u.email}')">Edit</button>
-            <button class="btn-del" onclick="deleteUser(${u.id})">Delete</button>
+            <button type="button" class="btn-edit" data-action="edit" data-id="${escapeHTML(u.id)}" aria-label="Edit user ${escapeHTML(u.name)}">Edit</button>
+            <button type="button" class="btn-del" data-action="delete" data-id="${escapeHTML(u.id)}" aria-label="Delete user ${escapeHTML(u.name)}">Delete</button>
           </div>
         </td>
       </tr>
@@ -49,6 +55,27 @@ async function loadUsers() {
     showFeedback("error", "Could not reach the server.");
   }
 }
+
+document.getElementById("users-body").addEventListener("click", (event) => {
+  const btn = event.target.closest("button[data-action]");
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === "delete") {
+    deleteUser(id);
+  } else if (btn.dataset.action === "edit") {
+    const row = btn.closest("tr");
+    const name  = row.children[1].textContent;
+    const email = row.children[2].textContent;
+    startEdit(id, name, email);
+  }
+});
+
+document.getElementById("user-form").addEventListener("submit", (event) => {
+  event.preventDefault();
+  submitForm();
+});
+
+document.getElementById("btn-cancel").addEventListener("click", resetForm);
 
 async function submitForm() {
   const name     = document.getElementById("input-name").value.trim();
@@ -116,8 +143,9 @@ function startEdit(id, name, email) {
   badge.textContent = `EDIT MODE (id: ${id})`;
   badge.classList.add("edit-mode");
 
-  document.getElementById("btn-submit").textContent   = "Save Changes";
-  document.getElementById("btn-cancel").style.display = "block";
+  document.getElementById("btn-submit").textContent = "Save Changes";
+  document.getElementById("btn-cancel").hidden       = false;
+  document.getElementById("input-name").focus();
 }
 
 function resetForm() {
@@ -130,10 +158,10 @@ function resetForm() {
   badge.textContent = "CREATE MODE";
   badge.classList.remove("edit-mode");
 
-  document.getElementById("btn-submit").textContent   = "Create User";
-  document.getElementById("btn-cancel").style.display = "none";
-  document.getElementById("feedback").className       = "";
-  document.getElementById("feedback").style.display   = "none";
+  document.getElementById("btn-submit").textContent = "Create User";
+  document.getElementById("btn-cancel").hidden       = true;
+  document.getElementById("feedback").className     = "";
+  document.getElementById("feedback").style.display = "none";
 }
 
 function showFeedback(type, msg) {
