@@ -1,10 +1,7 @@
 -- Run this file in psql or pgAdmin to set up your database
 -- psql -U postgres -f setup.sql
 
--- Create the database (run this line separately if needed)
--- CREATE DATABASE pg_crud_users;
-
--- Connect to the database first, then run:
+-- for local testing purposes
 
 CREATE TABLE IF NOT EXISTS users (
   id        SERIAL PRIMARY KEY,          -- auto-incrementing integer PK

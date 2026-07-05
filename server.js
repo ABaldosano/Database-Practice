@@ -8,9 +8,7 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// -------------------------------------------------------
 // 1. CONNECT TO POSTGRESQL (Supabase connection string)
-// -------------------------------------------------------
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false,
@@ -25,9 +23,7 @@ pool.connect((err, client, release) => {
   }
 });
 
-// -------------------------------------------------------
 // 2. MIDDLEWARE
-// -------------------------------------------------------
 app.use(express.json());
 app.use(cors({
   origin: [
@@ -38,10 +34,7 @@ app.use(cors({
 
 app.use(express.static(__dirname));
 
-
-// -------------------------------------------------------
 // 3. ROUTES (CRUD)
-// -------------------------------------------------------
 
 // READ ALL
 app.get("/api/users", async (req, res) => {
@@ -154,9 +147,8 @@ app.delete("/api/users/:id", async (req, res) => {
 });
 
 
-// -------------------------------------------------------
+
 // 4. START SERVER
-// -------------------------------------------------------
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
 });

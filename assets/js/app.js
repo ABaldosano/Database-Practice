@@ -1,11 +1,7 @@
-// Swap this URL to http://localhost:3000 when running locally
 const API = "https://database-practice-production.up.railway.app/api/users";
 
 let editingId = null;
 
-// --------------------------------------------------------
-// SQL DISPLAY
-// --------------------------------------------------------
 function showSQL(type, data = {}) {
   const el = document.getElementById("sql-display");
   const kw  = (s) => `<span class="keyword">${s}</span>`;
@@ -21,9 +17,6 @@ function showSQL(type, data = {}) {
   el.innerHTML = queries[type] || "";
 }
 
-// --------------------------------------------------------
-// LOAD ALL USERS
-// --------------------------------------------------------
 async function loadUsers() {
   showSQL("getAll");
   try {
@@ -57,9 +50,6 @@ async function loadUsers() {
   }
 }
 
-// --------------------------------------------------------
-// SUBMIT (CREATE or UPDATE)
-// --------------------------------------------------------
 async function submitForm() {
   const name     = document.getElementById("input-name").value.trim();
   const email    = document.getElementById("input-email").value.trim();
@@ -102,9 +92,6 @@ async function submitForm() {
   }
 }
 
-// --------------------------------------------------------
-// DELETE
-// --------------------------------------------------------
 async function deleteUser(id) {
   if (!confirm(`Delete user #${id}?`)) return;
   showSQL("delete", { id });
@@ -119,9 +106,6 @@ async function deleteUser(id) {
   }
 }
 
-// --------------------------------------------------------
-// EDIT MODE
-// --------------------------------------------------------
 function startEdit(id, name, email) {
   editingId = id;
   document.getElementById("input-name").value     = name;
