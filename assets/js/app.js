@@ -1,5 +1,5 @@
 // Swap this URL to http://localhost:3000 when running locally
-const API = "https://database-practice-production.up.railway.app";
+const API = "https://database-practice-production.up.railway.app/api/users";
 
 let editingId = null;
 
