@@ -1,12 +1,14 @@
-const API = "http://localhost:3000/api/users";
+// Swap this URL to http://localhost:3000 when running locally
+const API = "https://database-practice-production.up.railway.app";
+
 let editingId = null;
 
 // --------------------------------------------------------
-// SHOW SQL: just for learning -- displays what ran
+// SQL DISPLAY
 // --------------------------------------------------------
 function showSQL(type, data = {}) {
   const el = document.getElementById("sql-display");
-  const kw = (s) => `<span class="keyword">${s}</span>`;
+  const kw  = (s) => `<span class="keyword">${s}</span>`;
   const val = (s) => `<span class="value">'${s}'</span>`;
 
   const queries = {
@@ -20,39 +22,43 @@ function showSQL(type, data = {}) {
 }
 
 // --------------------------------------------------------
-// LOAD ALL USERS (READ)
+// LOAD ALL USERS
 // --------------------------------------------------------
 async function loadUsers() {
   showSQL("getAll");
-  const res = await fetch(API);
-  const users = await res.json();
+  try {
+    const res   = await fetch(API);
+    const users = await res.json();
 
-  document.getElementById("count-badge").textContent = users.length;
-  const tbody = document.getElementById("users-body");
+    document.getElementById("count-badge").textContent = users.length;
+    const tbody = document.getElementById("users-body");
 
-  if (users.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No users yet. Create one!</td></tr>`;
-    return;
+    if (users.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No users yet. Create one!</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = users.map(u => `
+      <tr>
+        <td class="id-cell">#${u.id}</td>
+        <td>${u.name}</td>
+        <td class="email-cell">${u.email}</td>
+        <td class="date-cell">${new Date(u.created_at).toLocaleDateString()}</td>
+        <td>
+          <div class="actions">
+            <button class="btn-edit" onclick="startEdit(${u.id}, '${u.name}', '${u.email}')">Edit</button>
+            <button class="btn-del" onclick="deleteUser(${u.id})">Delete</button>
+          </div>
+        </td>
+      </tr>
+    `).join("");
+  } catch (err) {
+    showFeedback("error", "Could not reach the server.");
   }
-
-  tbody.innerHTML = users.map(u => `
-    <tr>
-      <td class="id-cell">#${u.id}</td>
-      <td>${u.name}</td>
-      <td class="email-cell">${u.email}</td>
-      <td class="date-cell">${new Date(u.created_at).toLocaleDateString()}</td>
-      <td>
-        <div class="actions">
-          <button class="btn-edit" onclick="startEdit(${u.id}, '${u.name}', '${u.email}')">Edit</button>
-          <button class="btn-del" onclick="deleteUser(${u.id})">Delete</button>
-        </div>
-      </td>
-    </tr>
-  `).join("");
 }
 
 // --------------------------------------------------------
-// SUBMIT FORM (CREATE or UPDATE)
+// SUBMIT (CREATE or UPDATE)
 // --------------------------------------------------------
 async function submitForm() {
   const name     = document.getElementById("input-name").value.trim();
@@ -68,10 +74,8 @@ async function submitForm() {
   if (password) body.password = password;
 
   try {
-    let res, user;
-
+    let res;
     if (editingId) {
-      // UPDATE
       showSQL("update", { id: editingId, name, email });
       res = await fetch(`${API}/${editingId}`, {
         method: "PUT",
@@ -79,7 +83,6 @@ async function submitForm() {
         body: JSON.stringify(body),
       });
     } else {
-      // CREATE
       showSQL("create", { name, email });
       res = await fetch(API, {
         method: "POST",
@@ -89,78 +92,70 @@ async function submitForm() {
     }
 
     const data = await res.json();
-
-    if (!res.ok) {
-      showFeedback("error", data.error);
-      return;
-    }
+    if (!res.ok) { showFeedback("error", data.error); return; }
 
     showFeedback("success", editingId ? `Updated user #${data.id}` : `Created user #${data.id}!`);
     resetForm();
     loadUsers();
-
   } catch (err) {
     showFeedback("error", "Could not reach the server. Is it running?");
   }
 }
 
 // --------------------------------------------------------
-// DELETE USER
+// DELETE
 // --------------------------------------------------------
 async function deleteUser(id) {
   if (!confirm(`Delete user #${id}?`)) return;
   showSQL("delete", { id });
-
-  const res = await fetch(`${API}/${id}`, { method: "DELETE" });
-  const data = await res.json();
-
-  if (!res.ok) {
-    showFeedback("error", data.error);
-    return;
+  try {
+    const res  = await fetch(`${API}/${id}`, { method: "DELETE" });
+    const data = await res.json();
+    if (!res.ok) { showFeedback("error", data.error); return; }
+    showFeedback("success", data.message);
+    loadUsers();
+  } catch (err) {
+    showFeedback("error", "Could not reach the server.");
   }
-
-  showFeedback("success", data.message);
-  loadUsers();
 }
 
 // --------------------------------------------------------
-// EDIT MODE: pre-fill the form
+// EDIT MODE
 // --------------------------------------------------------
 function startEdit(id, name, email) {
   editingId = id;
-  document.getElementById("input-name").value = name;
-  document.getElementById("input-email").value = email;
+  document.getElementById("input-name").value     = name;
+  document.getElementById("input-email").value    = email;
   document.getElementById("input-password").value = "";
 
   const badge = document.getElementById("mode-badge");
   badge.textContent = `EDIT MODE (id: ${id})`;
   badge.classList.add("edit-mode");
 
-  document.getElementById("btn-submit").textContent = "Save Changes";
+  document.getElementById("btn-submit").textContent   = "Save Changes";
   document.getElementById("btn-cancel").style.display = "block";
 }
 
 function resetForm() {
   editingId = null;
-  document.getElementById("input-name").value = "";
-  document.getElementById("input-email").value = "";
+  document.getElementById("input-name").value     = "";
+  document.getElementById("input-email").value    = "";
   document.getElementById("input-password").value = "";
 
   const badge = document.getElementById("mode-badge");
   badge.textContent = "CREATE MODE";
   badge.classList.remove("edit-mode");
 
-  document.getElementById("btn-submit").textContent = "Create User";
+  document.getElementById("btn-submit").textContent   = "Create User";
   document.getElementById("btn-cancel").style.display = "none";
-  document.getElementById("feedback").className = "";
-  document.getElementById("feedback").style.display = "none";
+  document.getElementById("feedback").className       = "";
+  document.getElementById("feedback").style.display   = "none";
 }
 
 function showFeedback(type, msg) {
   const el = document.getElementById("feedback");
   el.textContent = msg;
-  el.className = type;
+  el.className   = type;
 }
 
-// Load users on page open
 loadUsers();
