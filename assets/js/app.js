@@ -56,17 +56,21 @@ async function loadUsers() {
   }
 }
 
-document.getElementById("users-body").addEventListener("click", (event) => {
+document.getElementById("users-body").addEventListener("click", async (event) => {
   const btn = event.target.closest("button[data-action]");
   if (!btn) return;
   const id = btn.dataset.id;
   if (btn.dataset.action === "delete") {
     deleteUser(id);
   } else if (btn.dataset.action === "edit") {
-    const row = btn.closest("tr");
-    const name  = row.children[1].textContent;
-    const email = row.children[2].textContent;
-    startEdit(id, name, email);
+    try {
+      const res  = await fetch(`${API}/${id}`);
+      const user = await res.json();
+      if (!res.ok) { showFeedback("error", user.error); return; }
+      startEdit(user.id, user.name, user.email);
+    } catch (err) {
+      showFeedback("error", "Could not reach the server.");
+    }
   }
 });
 

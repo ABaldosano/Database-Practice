@@ -26,6 +26,21 @@ function isValidPassword(password) {
   return typeof password === "string" && password.length >= 1 && password.length <= 72;
 }
 
+const PROFANITY_LIST = [
+  "fuck", "shit", "bitch", "asshole", "bastard", "damn", "crap",
+  "dick", "piss", "cunt", "slut", "whore",
+];
+
+function maskProfanity(text) {
+  if (!text) return text;
+  let result = String(text);
+  PROFANITY_LIST.forEach((word) => {
+    const pattern = new RegExp(`\\b${word}\\b`, "gi");
+    result = result.replace(pattern, (match) => "*".repeat(match.length));
+  });
+  return result;
+}
+
 // 1. CONNECT TO POSTGRESQL (Supabase connection string)
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -60,7 +75,12 @@ app.get("/api/users", async (req, res) => {
     const result = await pool.query(
       "SELECT id, name, email, created_at FROM users ORDER BY id ASC"
     );
-    res.json(result.rows);
+    const masked = result.rows.map((row) => ({
+      ...row,
+      name: maskProfanity(row.name),
+      email: maskProfanity(row.email),
+    }));
+    res.json(masked);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to fetch users" });
