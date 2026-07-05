@@ -428,6 +428,20 @@ tr:hover td { background: #f5f5f5; }
   .form-panel {
     position: static;
   }
+
+  table {
+    table-layout: auto;
+    min-width: 620px;
+  }
+
+  th:nth-child(1),
+  th:nth-child(2),
+  th:nth-child(3),
+  th:nth-child(4),
+  th:nth-child(5) {
+    width: auto;
+    white-space: nowrap;
+  }
 }
 
 @media (max-width: 480px) {
